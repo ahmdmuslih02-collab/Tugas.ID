@@ -9,6 +9,7 @@ dt_model = joblib.load("dt_model.pkl")
 rf_model = joblib.load("rf_model.pkl")
 encoders = joblib.load("encoders.pkl")
 feature_names = joblib.load("feature_names.pkl")
+target_encoder = joblib.load("target_encoder.pkl")
 
 # ===============================
 # KONFIGURASI HALAMAN
@@ -25,11 +26,11 @@ Aplikasi ini membandingkan **dua model klasifikasi**:
 - 🌳 **Decision Tree**
 - 🌲 **Random Forest**
 
-🎯 **Target prediksi:** `Customer type` → **Member / Normal**
+🎯 **Target Prediksi:** `Customer type` (**Member / Normal**)
 """)
 
 # ===============================
-# PILIH MODEL (SIDEBAR)
+# PILIH MODEL
 # ===============================
 model_choice = st.sidebar.radio(
     "📌 Pilih Model Klasifikasi",
@@ -76,7 +77,6 @@ input_data = pd.DataFrame([input_dict])
 # ===============================
 # 🔐 FIX UTAMA (ANTI ERROR)
 # ===============================
-# Pastikan urutan & jumlah fitur SAMA dengan saat training
 input_data = input_data.reindex(columns=feature_names, fill_value=0)
 
 # ===============================
@@ -84,20 +84,23 @@ input_data = input_data.reindex(columns=feature_names, fill_value=0)
 # ===============================
 if st.button("🔮 Prediksi Customer Type"):
     if model_choice == "Decision Tree":
-        prediction = dt_model.predict(input_data)[0]
-        st.success(f"🌳 Decision Tree → **{prediction.upper()}**")
+        pred = dt_model.predict(input_data)[0]
+        pred_label = target_encoder.inverse_transform([pred])[0]
+        st.success(f"🌳 Decision Tree → **{pred_label}**")
 
     else:
-        prediction = rf_model.predict(input_data)[0]
-        st.success(f"🌲 Random Forest → **{prediction.upper()}**")
+        pred = rf_model.predict(input_data)[0]
+        pred_label = target_encoder.inverse_transform([pred])[0]
+        st.success(f"🌲 Random Forest → **{pred_label}**")
 
 # ===============================
 # INFORMASI TAMBAHAN
 # ===============================
 st.markdown("""
 ---
-📌 **Catatan Teknis**
+📌 **Catatan**
 - Model dilatih menggunakan data supermarket
-- Semua fitur telah disamakan urutannya dengan data training
-- Random Forest umumnya lebih stabil dibanding Decision Tree
+- Target dikodekan menggunakan LabelEncoder
+- Output prediksi dikembalikan ke label asli
+- Random Forest cenderung lebih stabil
 """)
